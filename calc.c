@@ -19,6 +19,8 @@
 // Copy the register from regI to regO
 #define COPY(regI, regO) regO.bit8 = regI.bit8; regO.bit7 = regI.bit7; regO.bit6 = regI.bit6; regO.bit5 = regI.bit5; regO.bit4 = regI.bit4; regO.bit3 = regI.bit3; regO.bit2 = regI.bit2; regO.bit1 = regI.bit1;
 
+#define IS_EQUAL(regA, regB) ((regA.bit8 == regB.bit8) && (regA.bit7 == regB.bit7) && (regA.bit6 == regB.bit6) && (regA.bit5 == regB.bit5) && (regA.bit4 == regB.bit4) && (regA.bit3 == regB.bit3) && (regA.bit2 == regB.bit2) && (regA.bit1 == regB.bit))
+
 // assume bit ordering 87654321
 typedef struct {
 	unsigned int bit1 : 1;
@@ -419,6 +421,81 @@ void inc(reg *r) {
 
 #pragma endregion inc
 
+#pragma region dec
+
+void decTake8(reg *r) {
+    (*r).bit7 = 1;
+    if ((*r).bit8 == 0) {
+        CLEAR(reg2);                            // UNDERFLOW
+    } else {
+        (*r).bit8 = 0;
+    }
+}
+
+void decTake7(reg *r) {
+    (*r).bit6 = 1;
+    if ((*r).bit7 == 0) {
+        decTake8(r);                             // TAKE
+    } else {
+        (*r).bit7 = 0;
+    }
+}
+
+void decTake6(reg *r) {
+    (*r).bit5 = 1;
+    if ((*r).bit6 == 0) {
+        decTake7(r);                             // TAKE
+    } else {
+        (*r).bit6 = 0;
+    }
+}
+
+void decTake5(reg *r) {
+    (*r).bit4 = 1;
+    if ((*r).bit5 == 0) {
+        decTake6(r);                             // TAKE
+    } else {
+        (*r).bit5 = 0;
+    }
+}
+
+void decTake4(reg *r) {
+    (*r).bit3 = 1;
+    if ((*r).bit4 == 0) {
+        decTake5(r);                             // TAKE
+    } else {
+        (*r).bit4 = 0;
+    }
+}
+
+void decTake3(reg *r) {
+    (*r).bit2 = 1;
+    if ((*r).bit3 == 0) {
+        decTake4(r);                         // TAKE
+    } else {
+        (*r).bit3 = 0;
+    }
+}
+
+void decTake2(reg *r) {
+    (*r).bit1 = 1;
+    if ((*r).bit2 == 0) {
+        decTake3(r);                         // TAKE
+    } else {
+        (*r).bit2 = 0;
+    }
+}
+
+void dec(reg *r) {
+    if ((*r).bit1 == 0) {
+        decTake2(r);                             // TAKE
+    } else {
+        (*r).bit1 = 0;
+    }
+}
+
+#pragma endregion
+
 #pragma region add
 
 void addCarry8() {
@@ -679,306 +756,19 @@ void sub() {
 
 #pragma region mul
 
-void mulBit8() {
-    reg2.bit8 = (reg2.bit8 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit7 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit6 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit5 == 1 && reg1.bit4 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit4 == 1 && reg1.bit5 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit3 == 1 && reg1.bit6 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit2 == 1 && reg1.bit7 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-
-    if (reg2.bit1 == 1 && reg1.bit8 == 1) {
-        if (reg2.bit8 == 1) {
-            FILL(reg2);                     // OVERFLOW
-            FILL(reg1);
-            return;
-        } else {
-            reg2.bit8 = 1;
-        }
-    }
-}
-
-void mulBit7() {
-    reg2.bit7 = (reg2.bit7 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit6 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-
-    if (reg2.bit5 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-    
-    if (reg2.bit4 == 1 && reg1.bit4 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-
-    if (reg2.bit3 == 1 && reg1.bit5 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-
-    if (reg2.bit2 == 1 && reg1.bit6 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-
-    if (reg2.bit1 == 1 && reg1.bit7 == 1) {
-        if (reg2.bit7 == 1) {
-            addCarry8(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit7 = 1;
-        }
-    }
-}
-
-void mulBit6() {
-    reg2.bit6 = (reg2.bit6 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit5 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit6 == 1) {
-            addCarry7(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit6 = 1;
-        }
-    }
-    
-    if (reg2.bit4 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit6 == 1) {
-            addCarry7(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit6 = 1;
-        }
-    }
-    
-    if (reg2.bit3 == 1 && reg1.bit4 == 1) {
-        if (reg2.bit6 == 1) {
-            addCarry7(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit6 = 1;
-        }
-    }
-    
-    if (reg2.bit2 == 1 && reg1.bit5 == 1) {
-        if (reg2.bit6 == 1) {
-            addCarry7(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit6 = 1;
-        }
-    }
-    
-    if (reg2.bit1 == 1 && reg1.bit6 == 1) {
-        if (reg2.bit6 == 1) {
-            addCarry7(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit6 = 1;
-        }
-    }
-}
-
-void mulBit5() {
-    reg2.bit5 = (reg2.bit5 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit4 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit5 == 1) {
-            addCarry6(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit5 = 1;
-        }
-    }
-    
-    if (reg2.bit3 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit5 == 1) {
-            addCarry6(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit5 = 1;
-        }
-    }
-    
-    if (reg2.bit2 == 1 && reg1.bit4 == 1) {
-        if (reg2.bit5 == 1) {
-            addCarry6(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit5 = 1;
-        }
-    }
-    
-    if (reg2.bit5 == 1 && reg1.bit1 == 1) {
-        if (reg2.bit5 == 1) {
-            addCarry6(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit5 = 1;
-        }
-    }
-}
-
-void mulBit4() {
-    reg2.bit4 = (reg2.bit4 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit3 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit4 == 1) {
-            addCarry5(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit4 = 1;
-        }
-    }
-    
-    if (reg2.bit2 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit4 == 1) {
-            addCarry5(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit4 = 1;
-        }
-    }
-    
-    if (reg2.bit1 == 1 && reg1.bit4 == 1) {
-        if (reg2.bit4 == 1) {
-            addCarry5(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit4 = 1;
-        }
-    }
-}
-
-void mulBit3() {
-    reg2.bit3 = (reg2.bit3 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit2 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit3 == 1) {
-            addCarry4(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit3 = 1;
-        }
-    }
-    
-    if (reg2.bit1 == 1 && reg1.bit3 == 1) {
-        if (reg2.bit3 == 1) {
-            addCarry4(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit3 = 1;
-        }
-    }
-}
-
-void mulBit2() {
-    reg2.bit2 = (reg2.bit2 == 1 && reg1.bit1 == 1) ? 1: 0;
-
-    if (reg2.bit1 == 1 && reg1.bit2 == 1) {
-        if (reg2.bit2 == 1) {
-            addCarry3(reg2);                // Carry
-            return;
-        } else {
-            reg2.bit2 = 1;
-        }
-    }
-}
-
-void mulBit1() {
-    reg2.bit1 = (reg2.bit1 == 1 && reg1.bit1 == 1) ? 1: 0;
-}
-
 void mul() {
-    mulBit8();
-    mulBit7();
-    mulBit6();
-    mulBit5();
-    mulBit4();
-    mulBit3();
-    mulBit2();
-    mulBit1();
+    // Init loop counter
+    COPY(reg2, reg3);
+    CLEAR(reg2);
+    if (IS(reg3, 0, 0, 0, 0, 0, 0, 0, 0)) {
+        return;
+    }
+    mul_loop:
+    add();
+    dec(&reg3);
+    if (!IS(reg3, 0, 0, 0, 0, 0, 0, 0, 0)) {
+        goto mul_loop;
+    }
 }
 
 #pragma endregion mul
@@ -999,7 +789,21 @@ void dvd() {
 
 #pragma endregion div
 
+#pragma region mod
 
+void mod() {
+    // Init loop counter
+    COPY(reg2, reg3);
+    mod_loop:
+    sub();
+    if (!(IS(reg2, 0, 0, 0, 0, 0, 0, 0, 0) && IS(reg1, 0, 0, 0, 0, 0, 0, 0, 0))) {
+        COPY(reg2, reg3);
+        goto mod_loop;
+    }
+    COPY(reg3, reg2);
+}
+
+#pragma endregion mod
 
 // Checks the operator and does the calculation
 void resolveOperation() {
@@ -1014,6 +818,9 @@ void resolveOperation() {
         CLEAR(reg3);
     } else if (IS(reg3,0,0,0,0,0,1,0,0)) {  // /
         dvd();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,1,0,1)) {  // %
+        mod();
         CLEAR(reg3);
     }
 }
@@ -1058,6 +865,8 @@ int main(int argc, char* argv[]){
             SET(reg3, 0, 0, 0, 0, 0, 1, 0, 0);
         } else if (c == '%') {
             // MODULO
+            commonResolveCheck();
+            SET(reg3, 0, 0, 0, 0, 0, 1, 0, 1);
         } else if (c == '^') {
             // POWER
         } else if (c == 'r') {
