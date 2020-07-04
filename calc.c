@@ -33,7 +33,7 @@ typedef struct {
 
 reg reg1;   // input
 reg reg2;   // prev/out
-reg reg3;   // op
+reg reg3;   // op/help
 reg reg4;   // keep
 
 // Ops list
@@ -344,9 +344,83 @@ void printReg2() {
     printf("%d", output);
 }
 
+#pragma region inc
+
+void incCarry8(reg *r) {
+    (*r).bit7 = 0;
+    if ((*r).bit8 == 1) {
+        FILL((*r));         // OVERFLOW
+    } else {
+        (*r).bit8 = 1;
+    }
+}
+
+void incCarry7(reg *r) {
+    (*r).bit6 = 0;
+    if ((*r).bit7 == 1) {
+        incCarry8(r);
+    } else {
+        (*r).bit7 = 1;
+    }
+}
+
+void incCarry6(reg *r) {
+    (*r).bit5 = 0;
+    if ((*r).bit6 == 1) {
+        incCarry7(r);
+    } else {
+        (*r).bit6 = 1;
+    }
+}
+
+void incCarry5(reg *r) {
+    (*r).bit4 = 0;
+    if ((*r).bit5 == 1) {
+        incCarry6(r);
+    } else {
+        (*r).bit5 = 1;
+    }
+}
+
+void incCarry4(reg *r) {
+    (*r).bit3 = 0;
+    if ((*r).bit4 == 1) {
+        incCarry5(r);
+    } else {
+        (*r).bit4 = 1;
+    }
+}
+
+void incCarry3(reg *r) {
+    (*r).bit2 = 0;
+    if ((*r).bit3 == 1) {
+        incCarry4(r);
+    } else {
+        (*r).bit3 = 1;
+    }
+}
+
+void incCarry2(reg *r) {
+    (*r).bit1 = 0;
+    if ((*r).bit2 == 1) {
+        incCarry3(r);
+    } else {
+        (*r).bit2 = 1;
+    }
+}
+
+void inc(reg *r) {
+    if ((*r).bit1 == 1) {
+        incCarry2(r);
+    } else {
+        (*r).bit1 = 1;
+    }
+}
+
+#pragma endregion inc
+
 #pragma region add
 
-// Addition functions
 void addCarry8() {
     reg2.bit7 = 0;
     if (reg2.bit8 == 1) {
@@ -476,6 +550,7 @@ void add() {
 void subTake8() {
     if (reg2.bit8 == 0) {
         CLEAR(reg2);                            // UNDERFLOW
+        CLEAR(reg1);
     } else {
         reg2.bit8 = 0;
     }
@@ -896,26 +971,35 @@ void mulBit1() {
 }
 
 void mul() {
-    debugPrint(reg2);
     mulBit8();
-    debugPrint(reg2);
     mulBit7();
-    debugPrint(reg2);
     mulBit6();
-    debugPrint(reg2);
     mulBit5();
-    debugPrint(reg2);
     mulBit4();
-    debugPrint(reg2);
     mulBit3();
-    debugPrint(reg2);
     mulBit2();
-    debugPrint(reg2);
     mulBit1();
-    debugPrint(reg2);
 }
 
 #pragma endregion mul
+
+#pragma region div
+
+void dvd() {
+    // Init loop counter
+    CLEAR(reg3);
+    div_loop:
+    sub();
+    if (!(IS(reg2, 0, 0, 0, 0, 0, 0, 0, 0) && IS(reg1, 0, 0, 0, 0, 0, 0, 0, 0))) {
+        inc(&reg3);
+        goto div_loop;
+    }
+    COPY(reg3, reg2);
+}
+
+#pragma endregion div
+
+
 
 // Checks the operator and does the calculation
 void resolveOperation() {
@@ -927,6 +1011,9 @@ void resolveOperation() {
         CLEAR(reg3);
     } else if (IS(reg3,0,0,0,0,0,0,1,1)) {  // *
         mul();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,1,0,0)) {  // /
+        dvd();
         CLEAR(reg3);
     }
 }
@@ -967,6 +1054,8 @@ int main(int argc, char* argv[]){
             SET(reg3, 0, 0, 0, 0, 0, 0, 1, 1);
         } else if (c == '/') {
             // DIVISION
+            commonResolveCheck();
+            SET(reg3, 0, 0, 0, 0, 0, 1, 0, 0);
         } else if (c == '%') {
             // MODULO
         } else if (c == '^') {
