@@ -348,16 +348,18 @@ void printReg2() {
 
 // Addition functions
 void addCarry8() {
+    reg2.bit7 = 0;
     if (reg2.bit8 == 1) {
         FILL(reg2);         // OVERFLOW
+        FILL(reg1);
     } else {
         reg2.bit8 = 1;
     }
 }
 
 void addCarry7() {
+    reg2.bit6 = 0;
     if (reg2.bit7 == 1) {
-        reg2.bit7 = 0;
         addCarry8();
     } else {
         reg2.bit7 = 1;
@@ -365,8 +367,8 @@ void addCarry7() {
 }
 
 void addCarry6() {
+    reg2.bit5 = 0;
     if (reg2.bit6 == 1) {
-        reg2.bit6 = 0;
         addCarry7();
     } else {
         reg2.bit6 = 1;
@@ -374,8 +376,8 @@ void addCarry6() {
 }
 
 void addCarry5() {
+    reg2.bit4 = 0;
     if (reg2.bit5 == 1) {
-        reg2.bit5 = 0;
         addCarry6();
     } else {
         reg2.bit5 = 1;
@@ -383,8 +385,8 @@ void addCarry5() {
 }
 
 void addCarry4() {
+    reg2.bit3 = 0;
     if (reg2.bit4 == 1) {
-        reg2.bit4 = 0;
         addCarry5();
     } else {
         reg2.bit4 = 1;
@@ -392,8 +394,8 @@ void addCarry4() {
 }
 
 void addCarry3() {
+    reg2.bit2 = 0;
     if (reg2.bit3 == 1) {
-        reg2.bit3 = 0;
         addCarry4();
     } else {
         reg2.bit3 = 1;
@@ -401,8 +403,8 @@ void addCarry3() {
 }
 
 void addCarry2() {
+    reg2.bit1 = 0;
     if (reg2.bit2 == 1) {
-        reg2.bit2 = 0;
         addCarry3();
     } else {
         reg2.bit2 = 1;
@@ -419,7 +421,6 @@ void add() {
 
     // Add bit 7
     if (reg1.bit7 == 1 && reg2.bit7 == 1) {
-        reg2.bit7 = 0;
         addCarry8();                            // CARRY
     } else {
         reg2.bit7 = (reg2.bit7 == 1) ? 1 : reg1.bit7;
@@ -427,7 +428,6 @@ void add() {
 
     // Add bit 6
     if (reg1.bit6 == 1 && reg2.bit6 == 1) {
-        reg2.bit6 = 0;
         addCarry7();                            // CARRY
     } else {
         reg2.bit6 = (reg2.bit6 == 1) ? 1 : reg1.bit6;
@@ -435,7 +435,6 @@ void add() {
 
     // Add bit 5
     if (reg1.bit5 == 1 && reg2.bit5 == 1) {
-        reg2.bit5 = 0;
         addCarry6();                            // CARRY
     } else {
         reg2.bit5 = (reg2.bit5 == 1) ? 1 : reg1.bit5;
@@ -443,7 +442,6 @@ void add() {
 
     // Add bit 4
     if (reg1.bit4 == 1 && reg2.bit4 == 1) {
-        reg2.bit4 = 0;
         addCarry5();                            // CARRY
     } else {
         reg2.bit4 = (reg2.bit4 == 1) ? 1 : reg1.bit4;
@@ -451,7 +449,6 @@ void add() {
 
     // Add bit 3
     if (reg1.bit3 == 1 && reg2.bit3 == 1) {
-        reg2.bit3 = 0;
         addCarry4();                            // CARRY
     } else {
         reg2.bit3 = (reg2.bit3 == 1) ? 1 : reg1.bit3;
@@ -459,7 +456,6 @@ void add() {
     
     // Add bit 2
     if (reg1.bit2 == 1 && reg2.bit2 == 1) {
-        reg2.bit2 = 0;
         addCarry3();                            // CARRY
     } else {
         reg2.bit2 = (reg2.bit2 == 1) ? 1 : reg1.bit2;
@@ -467,7 +463,6 @@ void add() {
 
     // Add bit 1
     if (reg1.bit1 == 1 && reg2.bit1 == 1) {
-        reg2.bit1 = 0;
         addCarry2();                            // CARRY
     } else {
         reg2.bit1 = (reg2.bit1 == 1) ? 1 : reg1.bit1;
@@ -580,8 +575,6 @@ void sub() {
         reg2.bit4 = (reg1.bit4 == 1) ? 0 : reg2.bit4;
     }
 
-    debugPrint(reg2);
-
     // Subtract bit 3
     if (reg1.bit3 == 1 && reg2.bit3 == 0) {
         reg2.bit3 = 1;
@@ -589,8 +582,6 @@ void sub() {
     } else {
         reg2.bit3 = (reg1.bit3 == 1) ? 0 : reg2.bit3;
     }
-
-    debugPrint(reg2);
 
     // Subtract bit 2
     if (reg1.bit2 == 1 && reg2.bit2 == 0) {
@@ -600,8 +591,6 @@ void sub() {
         reg2.bit2 = (reg1.bit2 == 1) ? 0 : reg2.bit2;
     }
 
-    debugPrint(reg2);
-
     // Subtract bit 1
     if (reg1.bit1 == 1 && reg2.bit1 == 0) {
         reg2.bit1 = 1;
@@ -609,11 +598,324 @@ void sub() {
     } else {
         reg2.bit1 = (reg1.bit1 == 1) ? 0 : reg2.bit1;
     }
-
-    debugPrint(reg2);
 }
 
 #pragma endregion sub
+
+#pragma region mul
+
+void mulBit8() {
+    reg2.bit8 = (reg2.bit8 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit7 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit6 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit5 == 1 && reg1.bit4 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit4 == 1 && reg1.bit5 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit3 == 1 && reg1.bit6 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit2 == 1 && reg1.bit7 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+
+    if (reg2.bit1 == 1 && reg1.bit8 == 1) {
+        if (reg2.bit8 == 1) {
+            FILL(reg2);                     // OVERFLOW
+            FILL(reg1);
+            return;
+        } else {
+            reg2.bit8 = 1;
+        }
+    }
+}
+
+void mulBit7() {
+    reg2.bit7 = (reg2.bit7 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit6 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+
+    if (reg2.bit5 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+    
+    if (reg2.bit4 == 1 && reg1.bit4 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+
+    if (reg2.bit3 == 1 && reg1.bit5 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+
+    if (reg2.bit2 == 1 && reg1.bit6 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+
+    if (reg2.bit1 == 1 && reg1.bit7 == 1) {
+        if (reg2.bit7 == 1) {
+            addCarry8(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit7 = 1;
+        }
+    }
+}
+
+void mulBit6() {
+    reg2.bit6 = (reg2.bit6 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit5 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit6 == 1) {
+            addCarry7(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit6 = 1;
+        }
+    }
+    
+    if (reg2.bit4 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit6 == 1) {
+            addCarry7(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit6 = 1;
+        }
+    }
+    
+    if (reg2.bit3 == 1 && reg1.bit4 == 1) {
+        if (reg2.bit6 == 1) {
+            addCarry7(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit6 = 1;
+        }
+    }
+    
+    if (reg2.bit2 == 1 && reg1.bit5 == 1) {
+        if (reg2.bit6 == 1) {
+            addCarry7(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit6 = 1;
+        }
+    }
+    
+    if (reg2.bit1 == 1 && reg1.bit6 == 1) {
+        if (reg2.bit6 == 1) {
+            addCarry7(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit6 = 1;
+        }
+    }
+}
+
+void mulBit5() {
+    reg2.bit5 = (reg2.bit5 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit4 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit5 == 1) {
+            addCarry6(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit5 = 1;
+        }
+    }
+    
+    if (reg2.bit3 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit5 == 1) {
+            addCarry6(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit5 = 1;
+        }
+    }
+    
+    if (reg2.bit2 == 1 && reg1.bit4 == 1) {
+        if (reg2.bit5 == 1) {
+            addCarry6(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit5 = 1;
+        }
+    }
+    
+    if (reg2.bit5 == 1 && reg1.bit1 == 1) {
+        if (reg2.bit5 == 1) {
+            addCarry6(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit5 = 1;
+        }
+    }
+}
+
+void mulBit4() {
+    reg2.bit4 = (reg2.bit4 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit3 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit4 == 1) {
+            addCarry5(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit4 = 1;
+        }
+    }
+    
+    if (reg2.bit2 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit4 == 1) {
+            addCarry5(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit4 = 1;
+        }
+    }
+    
+    if (reg2.bit1 == 1 && reg1.bit4 == 1) {
+        if (reg2.bit4 == 1) {
+            addCarry5(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit4 = 1;
+        }
+    }
+}
+
+void mulBit3() {
+    reg2.bit3 = (reg2.bit3 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit2 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit3 == 1) {
+            addCarry4(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit3 = 1;
+        }
+    }
+    
+    if (reg2.bit1 == 1 && reg1.bit3 == 1) {
+        if (reg2.bit3 == 1) {
+            addCarry4(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit3 = 1;
+        }
+    }
+}
+
+void mulBit2() {
+    reg2.bit2 = (reg2.bit2 == 1 && reg1.bit1 == 1) ? 1: 0;
+
+    if (reg2.bit1 == 1 && reg1.bit2 == 1) {
+        if (reg2.bit2 == 1) {
+            addCarry3(reg2);                // Carry
+            return;
+        } else {
+            reg2.bit2 = 1;
+        }
+    }
+}
+
+void mulBit1() {
+    reg2.bit1 = (reg2.bit1 == 1 && reg1.bit1 == 1) ? 1: 0;
+}
+
+void mul() {
+    debugPrint(reg2);
+    mulBit8();
+    debugPrint(reg2);
+    mulBit7();
+    debugPrint(reg2);
+    mulBit6();
+    debugPrint(reg2);
+    mulBit5();
+    debugPrint(reg2);
+    mulBit4();
+    debugPrint(reg2);
+    mulBit3();
+    debugPrint(reg2);
+    mulBit2();
+    debugPrint(reg2);
+    mulBit1();
+    debugPrint(reg2);
+}
+
+#pragma endregion mul
 
 // Checks the operator and does the calculation
 void resolveOperation() {
@@ -622,6 +924,9 @@ void resolveOperation() {
         CLEAR(reg3);
     } else if (IS(reg3,0,0,0,0,0,0,1,0)) {  // -
         sub();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,0,1,1)) {  // *
+        mul();
         CLEAR(reg3);
     }
 }
@@ -658,6 +963,8 @@ int main(int argc, char* argv[]){
             SET(reg3, 0, 0, 0, 0, 0, 0, 1, 0);
         } else if (c == '*') {
             // MULTIPLICATION
+            commonResolveCheck();
+            SET(reg3, 0, 0, 0, 0, 0, 0, 1, 1);
         } else if (c == '/') {
             // DIVISION
         } else if (c == '%') {
