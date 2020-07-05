@@ -20,6 +20,7 @@
 #define COPY(regI, regO) regO.bit8 = regI.bit8; regO.bit7 = regI.bit7; regO.bit6 = regI.bit6; regO.bit5 = regI.bit5; regO.bit4 = regI.bit4; regO.bit3 = regI.bit3; regO.bit2 = regI.bit2; regO.bit1 = regI.bit1;
 
 #define IS_EQUAL(regA, regB) ((regA.bit8 == regB.bit8) && (regA.bit7 == regB.bit7) && (regA.bit6 == regB.bit6) && (regA.bit5 == regB.bit5) && (regA.bit4 == regB.bit4) && (regA.bit3 == regB.bit3) && (regA.bit2 == regB.bit2) && (regA.bit1 == regB.bit))
+#define LESS_THAN(regA, regB) ((regA.bit8 != regB.bit8) ? (regA.bit8 == 0) : ((regA.bit7 != regB.bit7) ? (regA.bit7 == 0) : ((regA.bit6 != regB.bit6) ? (regA.bit6 == 0) : ((regA.bit5 != regB.bit5) ? (regA.bit5 == 0) : ((regA.bit4 != regB.bit4) ? (regA.bit4 == 0) : ((regA.bit3 != regB.bit3) ? (regA.bit3 == 0) : ((regA.bit2 != regB.bit2) ? (regA.bit2 == 0) : ((regA.bit1 != regB.bit1) ? (regA.bit2 == 0) : 0))))))))
 
 // assume bit ordering 87654321
 typedef struct {
@@ -946,6 +947,98 @@ void pwr() {
 
 #pragma endregion pow
 
+#pragma region sqt
+
+void sqt() {
+    SET(reg3,0,0,0,0,0,1,0,0);  // 4
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,0,0,1);      // 1
+        return;
+    }
+
+    SET(reg3,0,0,0,0,1,0,0,1);  // 9
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,0,1,0);      // 2
+        return;
+    }
+
+    SET(reg3,0,0,0,1,0,0,0,0);  // 16
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,0,1,1);      // 3
+        return;
+    }
+
+    SET(reg3,0,0,0,1,1,0,0,1);  // 25
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,1,0,0);      // 4
+        return;
+    }
+
+    SET(reg3,0,0,1,0,0,1,0,0);  // 36
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,1,0,1);      // 5
+        return;
+    }
+
+    SET(reg3,0,0,1,1,0,0,0,1);  // 49
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,1,1,0);      // 6
+        return;
+    }
+
+    SET(reg3,0,1,0,0,0,0,0,0);  // 64
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,0,1,1,1);      // 7
+        return;
+    }
+
+    SET(reg3,0,1,0,1,0,0,0,1);  // 81
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,0,0,0);      // 8
+        return;
+    }
+
+    SET(reg3,0,1,1,0,0,1,0,0);  // 100
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,0,0,1);      // 9
+        return;
+    }
+
+    SET(reg3,0,1,1,1,1,0,0,1);  // 121
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,0,1,0);      // 10
+        return;
+    }
+
+    SET(reg3,1,0,0,1,0,0,0,0);  // 144
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,0,1,1);      // 11
+        return;
+    }
+
+    SET(reg3,1,0,1,0,1,0,0,1);  // 169
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,1,0,0);      // 12
+        return;
+    }
+
+    SET(reg3,1,1,0,0,0,1,0,0);  // 196
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,1,0,1);      // 13
+        return;
+    }
+
+    SET(reg3,1,1,1,0,0,0,0,1);  // 225
+    if (LESS_THAN(reg1, reg3)) {
+        SET(reg1,0,0,0,0,1,1,1,0);      // 14
+        return;
+    }
+
+    SET(reg1,0,0,0,0,1,1,1,1);
+}
+
+#pragma endregion sqt
+
 // Checks the operator and does the calculation
 void resolveOperation() {
     if (IS(reg3,0,0,0,0,0,0,0,1)) {         // +
@@ -991,12 +1084,62 @@ void resolveOperation() {
         COPY(reg2, reg1);
         COPY(reg4, reg2);
         SET(reg3,0,0,0,0,0,1,0,1);
+    } else if (IS(reg3,0,0,1,0,0,0,0,0)) {  // r
+        sqt();
+        COPY(reg1, reg2);
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,1,0,0,0,0,1)) {  // +r
+        printf("test\n");
+        sqt();
+        SET(reg3,0,0,0,0,0,0,0,1);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,0,0,0,1,0)) {  // -r
+        sqt();
+        SET(reg3,0,0,0,0,0,0,1,0);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,0,0,0,1,1)) {  // *r
+        sqt();
+        SET(reg3,0,0,0,0,0,0,1,1);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,0,0,1,0,0)) {  // /r
+        sqt();
+        SET(reg3,0,0,0,0,0,1,0,0);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,0,0,1,0,1)) {  // %r
+        sqt();
+        SET(reg3,0,0,0,0,0,1,0,1);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,0,0,0)) {  // ^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,0,0);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,0,0,1)) {  // +^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,0,1);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,0,1,0)) {  // -^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,1,0);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,0,1,1)) {  // *^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,1,1);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,1,0,0)) {  // /^r
+        sqt();
+        SET(reg3,0,0,0,1,0,1,0,0);
+        resolveOperation();
+    } else if (IS(reg3,0,0,1,1,0,1,0,1)) {  // %^r
+        sqt();
+        SET(reg3,0,0,0,1,0,1,0,1);
+        resolveOperation();
     }
 }
 
 void commonResolveCheck() {
     if (NOT_EMPTY(reg3)) {
         resolveOperation();
+        debugPrint(reg1);
         CLEAR(reg1);
     } else {
         COPY(reg1, reg2);
@@ -1004,9 +1147,95 @@ void commonResolveCheck() {
     }
 }
 
-void superResolveCheck() {
+// Checks the operator and does the calculation
+void powerResolveOperation() {
+    if (IS(reg3,0,0,0,0,0,0,0,1)) {         // +
+        add();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,0,1,0)) {  // -
+        sub();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,0,1,1)) {  // *
+        mul();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,1,0,0)) {  // /
+        dvd();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,0,0,1,0,1)) {  // %
+        mod();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,1,0,0,0,0)) {  // ^
+        pwr();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,1,0,0,0,1)) {  // +^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,0,1);
+    } else if (IS(reg3,0,0,0,1,0,0,1,0)) {  // -^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,1,0);
+    } else if (IS(reg3,0,0,0,1,0,0,1,1)) {  // *^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,1,1);
+    } else if (IS(reg3,0,0,0,1,0,1,0,0)) {  // /^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,1,0,0);
+    } else if (IS(reg3,0,0,0,1,0,1,0,1)) {  // %^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,1,0,1);
+    } else if (IS(reg3,0,0,1,0,0,0,0,0)) {  // r
+        sqt();
+        COPY(reg1, reg2);
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,1,0,0,0,0,1)) {  // +r
+        printf("test\n");
+        sqt();
+        SET(reg3,0,0,0,0,0,0,0,1);
+    } else if (IS(reg3,0,0,1,0,0,0,1,0)) {  // -r
+        sqt();
+        SET(reg3,0,0,0,0,0,0,1,0);
+    } else if (IS(reg3,0,0,1,0,0,0,1,1)) {  // *r
+        sqt();
+        SET(reg3,0,0,0,0,0,0,1,1);
+    } else if (IS(reg3,0,0,1,0,0,1,0,0)) {  // /r
+        sqt();
+        SET(reg3,0,0,0,0,0,1,0,0);
+    } else if (IS(reg3,0,0,1,0,0,1,0,1)) {  // %r
+        sqt();
+        SET(reg3,0,0,0,0,0,1,0,1);
+    } else if (IS(reg3,0,0,1,1,0,0,0,0)) {  // ^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,0,0);
+    } else if (IS(reg3,0,0,1,1,0,0,0,1)) {  // +^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,0,1);
+    } else if (IS(reg3,0,0,1,1,0,0,1,0)) {  // -^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,1,0);
+    } else if (IS(reg3,0,0,1,1,0,0,1,1)) {  // *^r
+        sqt();
+        SET(reg3,0,0,0,1,0,0,1,1);
+    } else if (IS(reg3,0,0,1,1,0,1,0,0)) {  // /^r
+        sqt();
+        SET(reg3,0,0,0,1,0,1,0,0);
+    } else if (IS(reg3,0,0,1,1,0,1,0,1)) {  // %^r
+        sqt();
+        SET(reg3,0,0,0,1,0,1,0,1);
+    }
+}
+
+void powerResolveCheck() {
     if ((reg3.bit5 == 1) || (reg3.bit6 == 1)) {
-        resolveOperation();
+        powerResolveOperation();
         COPY(reg2, reg4);
         COPY(reg1, reg2);
         CLEAR(reg1);
@@ -1051,11 +1280,10 @@ int main(int argc, char* argv[]){
             SET(reg3, 0, 0, 0, 0, 0, 1, 0, 1);
         } else if (c == '^') {
             // POWER
-            superResolveCheck();
+            powerResolveCheck();
             reg3.bit5 = 1;
         } else if (c == 'r') {
             // SQUARE ROOT
-            superResolveCheck();
             reg3.bit6 = 1;
         } else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
             // WHITESPACE (IGNORE)
@@ -1068,6 +1296,8 @@ int main(int argc, char* argv[]){
         resolveOperation();
         if (NOT_EMPTY(reg3)) {      // resolve supers
             resolveOperation();
+        } else if (IS(reg2,0,0,0,0,0,0,0,0)) {
+            COPY(reg1, reg2);
         }
     } else {
         COPY(reg1, reg2);
