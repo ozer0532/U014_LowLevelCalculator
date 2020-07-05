@@ -52,270 +52,6 @@ void debugPrint(reg regI) {
     printf("%d:%d:%d:%d:%d:%d:%d:%d\n", regI.bit8, regI.bit7, regI.bit6, regI.bit5, regI.bit4, regI.bit3, regI.bit2, regI.bit1);
 }
 
-// Reads numeric input into reg1
-void parseInput(char c) {
-    // -- Multiply reg1 by 10 (0b1010) --
-    // Multiply by 10
-    if (reg1.bit8 == 1) {
-        FILL(reg1);
-        return;
-    }
-    reg1.bit8 = reg1.bit7;
-    reg1.bit7 = reg1.bit6;
-    reg1.bit6 = reg1.bit5;
-    reg1.bit5 = reg1.bit4;
-    reg1.bit4 = reg1.bit3;
-    reg1.bit3 = reg1.bit2;
-    reg1.bit2 = reg1.bit1;
-    reg1.bit1 = 0;
-
-    // Multiply by 1000
-
-    // Bit 8 & 7
-    if (reg1.bit8 == 1) {
-        FILL(reg1);
-        return;
-    }
-    if (reg1.bit7 == 1) {
-        FILL(reg1);
-        return;
-    }
-
-    // Bit 6
-    if (AND_GATE(reg1, bit6, reg1, bit8) == 1) {    // overflow
-        FILL(reg1);
-    } else {
-        reg1.bit8 = (reg1.bit8 == 1) ? 1 : reg1.bit6;
-    }
-
-    // Bit 5
-    if (AND_GATE(reg1, bit5, reg1, bit7) == 1) {    // carry to 8
-        reg1.bit7 = 0;
-        if (reg1.bit8 == 1) {                       // overflow
-            FILL(reg1);
-        } else {
-            reg1.bit8 = 1;
-        }
-    } else {
-        reg1.bit7 = (reg1.bit7 == 1) ? 1 : reg1.bit5;
-    }
-
-    // Bit 4
-    if (AND_GATE(reg1, bit4, reg1, bit6) == 1) {    // carry to 7
-        reg1.bit6 = 0;
-        if (reg1.bit7 == 1) {                       // carry to 8
-            reg1.bit7 = 0;
-            if (reg1.bit8 == 1) {                   // overflow
-                FILL(reg1);
-            } else {
-                reg1.bit8 = 1;
-            }
-        } else {
-            reg1.bit7 = 1;
-        }
-    } else {
-        reg1.bit6 = (reg1.bit6 == 1) ? 1 : reg1.bit4;
-    }
-
-    // Bit 3
-    if (AND_GATE(reg1, bit3, reg1, bit5) == 1) {    // carry to 6
-        reg1.bit5 = 0;
-        if (reg1.bit6 == 1) {                       // carry to 7
-            reg1.bit6 = 0;
-            if (reg1.bit7 == 1) {                   // carry to 8
-                reg1.bit7 = 0;
-                if (reg1.bit8 == 1) {               // overflow
-                    FILL(reg1);
-                } else {
-                    reg1.bit8 = 1;
-                }
-            } else {
-                reg1.bit7 = 1;
-            }
-        } else {
-            reg1.bit6 = 1;
-        }
-    } else {
-        reg1.bit5 = (reg1.bit5 == 1) ? 1 : reg1.bit3;
-    }
-
-    // Bit 2
-    if (AND_GATE(reg1, bit2, reg1, bit4) == 1) {    // carry to 5
-        reg1.bit4 = 0;
-        if (reg1.bit5 == 1) {                       // carry to 6
-            reg1.bit5 = 0;
-            if (reg1.bit6 == 1) {                   // carry to 7
-                reg1.bit6 = 0;
-                if (reg1.bit7 == 1) {               // carry to 8
-                    reg1.bit7 = 0;
-                    if (reg1.bit8 == 1) {           // overflow
-                        FILL(reg1);
-                    } else {
-                        reg1.bit8 = 1;
-                    }
-                } else {
-                    reg1.bit7 = 1;
-                }
-            } else {
-                reg1.bit6 = 1;
-            }
-        } else {
-            reg1.bit5 = 1;
-        }
-    } else {
-        reg1.bit4 = (reg1.bit4 == 1) ? 1 : reg1.bit2;
-    }
-
-    // Bit 1 is 0 because of x10b
-
-    // -- Add character value --
-    // Bit 4
-    if (((c << 28) >> 31) == -1) {
-        if (reg1.bit4 == 1) {                           // carry to 5
-            reg1.bit4 = 0;
-            if (reg1.bit5 == 1) {                       // carry to 6
-                reg1.bit5 = 0;
-                if (reg1.bit6 == 1) {                   // carry to 7
-                    reg1.bit6 = 0;
-                    if (reg1.bit7 == 1) {               // carry to 8
-                        reg1.bit7 = 0;
-                        if (reg1.bit8 == 1) {           // overflow
-                            FILL(reg1);
-                        } else {
-                            reg1.bit8 = 1;
-                        }
-                    } else {
-                        reg1.bit7 = 1;
-                    }
-                } else {
-                    reg1.bit6 = 1;
-                }
-            } else {
-                reg1.bit5 = 1;
-            }
-        } else {
-            reg1.bit4 = 1;
-        }
-    }
-
-    // Bit 3
-    if (((c << 29) >> 31) == -1) {
-        if (reg1.bit3 == 1) {                           // carry to 4
-            reg1.bit3 = 0;
-            if (reg1.bit4 == 1) {                       // carry to 5
-                reg1.bit4 = 0;
-                if (reg1.bit5 == 1) {                   // carry to 6
-                    reg1.bit5 = 0;
-                    if (reg1.bit6 == 1) {               // carry to 7
-                        reg1.bit6 = 0;
-                        if (reg1.bit7 == 1) {           // carry to 8
-                            reg1.bit7 = 0;
-                            if (reg1.bit8 == 1) {       // overflow
-                                FILL(reg1);
-                            } else {
-                                reg1.bit8 = 1;
-                            }
-                        } else {
-                            reg1.bit7 = 1;
-                        }
-                    } else {
-                        reg1.bit6 = 1;
-                    }
-                } else {
-                    reg1.bit5 = 1;
-                }
-            } else {
-                reg1.bit4 = 1;
-            }
-        } else {
-            reg1.bit3 = 1;
-        }
-    }
-
-    // Bit 2
-    if (((c << 30) >> 31) == -1) {
-        if (reg1.bit2 == 1) {                           // carry to 3
-            reg1.bit2 = 0;
-            if (reg1.bit3 == 1) {                       // carry to 4
-                reg1.bit3 = 0;
-                if (reg1.bit4 == 1) {                   // carry to 5
-                    reg1.bit4 = 0;
-                    if (reg1.bit5 == 1) {               // carry to 6
-                        reg1.bit5 = 0;
-                        if (reg1.bit6 == 1) {           // carry to 7
-                            reg1.bit6 = 0;
-                            if (reg1.bit7 == 1) {       // carry to 8
-                                reg1.bit7 = 0;
-                                if (reg1.bit8 == 1) {   // overflow
-                                    FILL(reg1);
-                                } else {
-                                    reg1.bit8 = 1;
-                                }
-                            } else {
-                                reg1.bit7 = 1;
-                            }
-                        } else {
-                            reg1.bit6 = 1;
-                        }
-                    } else {
-                        reg1.bit5 = 1;
-                    }
-                } else {
-                    reg1.bit4 = 1;
-                }
-            } else {
-                reg1.bit3 = 1;
-            }
-        } else {
-            reg1.bit2 = 1;
-        }
-    }
-    
-    // Bit 1
-    if (((c << 31) >> 31) == -1) {
-        if (reg1.bit1 == 1) {                               // carry to 2
-            reg1.bit1 = 0;
-            if (reg1.bit2 == 1) {                           // carry to 3
-                reg1.bit2 = 0;
-                if (reg1.bit3 == 1) {                       // carry to 4
-                    reg1.bit3 = 0;
-                    if (reg1.bit4 == 1) {                   // carry to 5
-                        reg1.bit4 = 0;
-                        if (reg1.bit5 == 1) {               // carry to 6
-                            reg1.bit5 = 0;
-                            if (reg1.bit6 == 1) {           // carry to 7
-                                reg1.bit6 = 0;
-                                if (reg1.bit7 == 1) {       // carry to 8
-                                    reg1.bit7 = 0;
-                                    if (reg1.bit8 == 1) {   // overflow
-                                        FILL(reg1);
-                                    } else {
-                                        reg1.bit8 = 1;
-                                    }
-                                } else {
-                                    reg1.bit7 = 1;
-                                }
-                            } else {
-                                reg1.bit6 = 1;
-                            }
-                        } else {
-                            reg1.bit5 = 1;
-                        }
-                    } else {
-                        reg1.bit4 = 1;
-                    }
-                } else {
-                    reg1.bit3 = 1;
-                }
-            } else {
-                reg1.bit2 = 1;
-            }
-        } else {
-            reg1.bit1 = 1;
-        }
-    }
-}
-
 // Prints register 2 as numbers
 void printReg2() {
     int output = 0;
@@ -349,74 +85,74 @@ void printReg2() {
 
 #pragma region inc
 
-void incCarry8(reg *r) {
-    (*r).bit7 = 0;
-    if ((*r).bit8 == 1) {
-        FILL((*r));         // OVERFLOW
+void incCarry8() {
+    reg3.bit7 = 0;
+    if (reg3.bit8 == 1) {
+        FILL(reg3);         // OVERFLOW
     } else {
-        (*r).bit8 = 1;
+        reg3.bit8 = 1;
     }
 }
 
-void incCarry7(reg *r) {
-    (*r).bit6 = 0;
-    if ((*r).bit7 == 1) {
-        incCarry8(r);
+void incCarry7() {
+    reg3.bit6 = 0;
+    if (reg3.bit7 == 1) {
+        incCarry8();
     } else {
-        (*r).bit7 = 1;
+        reg3.bit7 = 1;
     }
 }
 
-void incCarry6(reg *r) {
-    (*r).bit5 = 0;
-    if ((*r).bit6 == 1) {
-        incCarry7(r);
+void incCarry6() {
+    reg3.bit5 = 0;
+    if (reg3.bit6 == 1) {
+        incCarry7();
     } else {
-        (*r).bit6 = 1;
+        reg3.bit6 = 1;
     }
 }
 
-void incCarry5(reg *r) {
-    (*r).bit4 = 0;
-    if ((*r).bit5 == 1) {
-        incCarry6(r);
+void incCarry5() {
+    reg3.bit4 = 0;
+    if (reg3.bit5 == 1) {
+        incCarry6();
     } else {
-        (*r).bit5 = 1;
+        reg3.bit5 = 1;
     }
 }
 
-void incCarry4(reg *r) {
-    (*r).bit3 = 0;
-    if ((*r).bit4 == 1) {
-        incCarry5(r);
+void incCarry4() {
+    reg3.bit3 = 0;
+    if (reg3.bit4 == 1) {
+        incCarry5();
     } else {
-        (*r).bit4 = 1;
+        reg3.bit4 = 1;
     }
 }
 
-void incCarry3(reg *r) {
-    (*r).bit2 = 0;
-    if ((*r).bit3 == 1) {
-        incCarry4(r);
+void incCarry3() {
+    reg3.bit2 = 0;
+    if (reg3.bit3 == 1) {
+        incCarry4();
     } else {
-        (*r).bit3 = 1;
+        reg3.bit3 = 1;
     }
 }
 
-void incCarry2(reg *r) {
-    (*r).bit1 = 0;
-    if ((*r).bit2 == 1) {
-        incCarry3(r);
+void incCarry2() {
+    reg3.bit1 = 0;
+    if (reg3.bit2 == 1) {
+        incCarry3();
     } else {
-        (*r).bit2 = 1;
+        reg3.bit2 = 1;
     }
 }
 
-void inc(reg *r) {
-    if ((*r).bit1 == 1) {
-        incCarry2(r);
+void inc() {
+    if (reg3.bit1 == 1) {
+        incCarry2();
     } else {
-        (*r).bit1 = 1;
+        reg3.bit1 = 1;
     }
 }
 
@@ -424,74 +160,74 @@ void inc(reg *r) {
 
 #pragma region dec
 
-void decTake8(reg *r) {
-    (*r).bit7 = 1;
-    if ((*r).bit8 == 0) {
+void decTake8() {
+    reg3.bit7 = 1;
+    if (reg3.bit8 == 0) {
         CLEAR(reg2);                            // UNDERFLOW
     } else {
-        (*r).bit8 = 0;
+        reg3.bit8 = 0;
     }
 }
 
-void decTake7(reg *r) {
-    (*r).bit6 = 1;
-    if ((*r).bit7 == 0) {
-        decTake8(r);                             // TAKE
+void decTake7() {
+    reg3.bit6 = 1;
+    if (reg3.bit7 == 0) {
+        decTake8();                             // TAKE
     } else {
-        (*r).bit7 = 0;
+        reg3.bit7 = 0;
     }
 }
 
-void decTake6(reg *r) {
-    (*r).bit5 = 1;
-    if ((*r).bit6 == 0) {
-        decTake7(r);                             // TAKE
+void decTake6() {
+    reg3.bit5 = 1;
+    if (reg3.bit6 == 0) {
+        decTake7();                             // TAKE
     } else {
-        (*r).bit6 = 0;
+        reg3.bit6 = 0;
     }
 }
 
-void decTake5(reg *r) {
-    (*r).bit4 = 1;
-    if ((*r).bit5 == 0) {
-        decTake6(r);                             // TAKE
+void decTake5() {
+    reg3.bit4 = 1;
+    if (reg3.bit5 == 0) {
+        decTake6();                             // TAKE
     } else {
-        (*r).bit5 = 0;
+        reg3.bit5 = 0;
     }
 }
 
-void decTake4(reg *r) {
-    (*r).bit3 = 1;
-    if ((*r).bit4 == 0) {
-        decTake5(r);                             // TAKE
+void decTake4() {
+    reg3.bit3 = 1;
+    if (reg3.bit4 == 0) {
+        decTake5();                             // TAKE
     } else {
-        (*r).bit4 = 0;
+        reg3.bit4 = 0;
     }
 }
 
-void decTake3(reg *r) {
-    (*r).bit2 = 1;
-    if ((*r).bit3 == 0) {
-        decTake4(r);                         // TAKE
+void decTake3() {
+    reg3.bit2 = 1;
+    if (reg3.bit3 == 0) {
+        decTake4();                         // TAKE
     } else {
-        (*r).bit3 = 0;
+        reg3.bit3 = 0;
     }
 }
 
-void decTake2(reg *r) {
-    (*r).bit1 = 1;
-    if ((*r).bit2 == 0) {
-        decTake3(r);                         // TAKE
+void decTake2() {
+    reg3.bit1 = 1;
+    if (reg3.bit2 == 0) {
+        decTake3();                         // TAKE
     } else {
-        (*r).bit2 = 0;
+        reg3.bit2 = 0;
     }
 }
 
-void dec(reg *r) {
-    if ((*r).bit1 == 0) {
-        decTake2(r);                             // TAKE
+void dec() {
+    if (reg3.bit1 == 0) {
+        decTake2();                             // TAKE
     } else {
-        (*r).bit1 = 0;
+        reg3.bit1 = 0;
     }
 }
 
@@ -1139,7 +875,6 @@ void resolveOperation() {
 void commonResolveCheck() {
     if (NOT_EMPTY(reg3)) {
         resolveOperation();
-        debugPrint(reg1);
         CLEAR(reg1);
     } else {
         COPY(reg1, reg2);
@@ -1289,7 +1024,268 @@ int main(int argc, char* argv[]){
             // WHITESPACE (IGNORE)
         } else {
             // NUMBER
-            parseInput(c);
+            #pragma region input
+            // -- Multiply reg1 by 10 (0b1010) --
+            // Multiply by 10
+            if (reg1.bit8 == 1) {
+                FILL(reg1);
+                return;
+            }
+            reg1.bit8 = reg1.bit7;
+            reg1.bit7 = reg1.bit6;
+            reg1.bit6 = reg1.bit5;
+            reg1.bit5 = reg1.bit4;
+            reg1.bit4 = reg1.bit3;
+            reg1.bit3 = reg1.bit2;
+            reg1.bit2 = reg1.bit1;
+            reg1.bit1 = 0;
+
+            // Multiply by 1000
+
+            // Bit 8 & 7
+            if (reg1.bit8 == 1) {
+                FILL(reg1);
+                return;
+            }
+            if (reg1.bit7 == 1) {
+                FILL(reg1);
+                return;
+            }
+
+            // Bit 6
+            if (AND_GATE(reg1, bit6, reg1, bit8) == 1) {    // overflow
+                FILL(reg1);
+            } else {
+                reg1.bit8 = (reg1.bit8 == 1) ? 1 : reg1.bit6;
+            }
+
+            // Bit 5
+            if (AND_GATE(reg1, bit5, reg1, bit7) == 1) {    // carry to 8
+                reg1.bit7 = 0;
+                if (reg1.bit8 == 1) {                       // overflow
+                    FILL(reg1);
+                } else {
+                    reg1.bit8 = 1;
+                }
+            } else {
+                reg1.bit7 = (reg1.bit7 == 1) ? 1 : reg1.bit5;
+            }
+
+            // Bit 4
+            if (AND_GATE(reg1, bit4, reg1, bit6) == 1) {    // carry to 7
+                reg1.bit6 = 0;
+                if (reg1.bit7 == 1) {                       // carry to 8
+                    reg1.bit7 = 0;
+                    if (reg1.bit8 == 1) {                   // overflow
+                        FILL(reg1);
+                    } else {
+                        reg1.bit8 = 1;
+                    }
+                } else {
+                    reg1.bit7 = 1;
+                }
+            } else {
+                reg1.bit6 = (reg1.bit6 == 1) ? 1 : reg1.bit4;
+            }
+
+            // Bit 3
+            if (AND_GATE(reg1, bit3, reg1, bit5) == 1) {    // carry to 6
+                reg1.bit5 = 0;
+                if (reg1.bit6 == 1) {                       // carry to 7
+                    reg1.bit6 = 0;
+                    if (reg1.bit7 == 1) {                   // carry to 8
+                        reg1.bit7 = 0;
+                        if (reg1.bit8 == 1) {               // overflow
+                            FILL(reg1);
+                        } else {
+                            reg1.bit8 = 1;
+                        }
+                    } else {
+                        reg1.bit7 = 1;
+                    }
+                } else {
+                    reg1.bit6 = 1;
+                }
+            } else {
+                reg1.bit5 = (reg1.bit5 == 1) ? 1 : reg1.bit3;
+            }
+
+            // Bit 2
+            if (AND_GATE(reg1, bit2, reg1, bit4) == 1) {    // carry to 5
+                reg1.bit4 = 0;
+                if (reg1.bit5 == 1) {                       // carry to 6
+                    reg1.bit5 = 0;
+                    if (reg1.bit6 == 1) {                   // carry to 7
+                        reg1.bit6 = 0;
+                        if (reg1.bit7 == 1) {               // carry to 8
+                            reg1.bit7 = 0;
+                            if (reg1.bit8 == 1) {           // overflow
+                                FILL(reg1);
+                            } else {
+                                reg1.bit8 = 1;
+                            }
+                        } else {
+                            reg1.bit7 = 1;
+                        }
+                    } else {
+                        reg1.bit6 = 1;
+                    }
+                } else {
+                    reg1.bit5 = 1;
+                }
+            } else {
+                reg1.bit4 = (reg1.bit4 == 1) ? 1 : reg1.bit2;
+            }
+
+            // Bit 1 is 0 because of x10b
+
+            // -- Add character value --
+            // Bit 4
+            if (((c << 28) >> 31) == -1) {
+                if (reg1.bit4 == 1) {                           // carry to 5
+                    reg1.bit4 = 0;
+                    if (reg1.bit5 == 1) {                       // carry to 6
+                        reg1.bit5 = 0;
+                        if (reg1.bit6 == 1) {                   // carry to 7
+                            reg1.bit6 = 0;
+                            if (reg1.bit7 == 1) {               // carry to 8
+                                reg1.bit7 = 0;
+                                if (reg1.bit8 == 1) {           // overflow
+                                    FILL(reg1);
+                                } else {
+                                    reg1.bit8 = 1;
+                                }
+                            } else {
+                                reg1.bit7 = 1;
+                            }
+                        } else {
+                            reg1.bit6 = 1;
+                        }
+                    } else {
+                        reg1.bit5 = 1;
+                    }
+                } else {
+                    reg1.bit4 = 1;
+                }
+            }
+
+            // Bit 3
+            if (((c << 29) >> 31) == -1) {
+                if (reg1.bit3 == 1) {                           // carry to 4
+                    reg1.bit3 = 0;
+                    if (reg1.bit4 == 1) {                       // carry to 5
+                        reg1.bit4 = 0;
+                        if (reg1.bit5 == 1) {                   // carry to 6
+                            reg1.bit5 = 0;
+                            if (reg1.bit6 == 1) {               // carry to 7
+                                reg1.bit6 = 0;
+                                if (reg1.bit7 == 1) {           // carry to 8
+                                    reg1.bit7 = 0;
+                                    if (reg1.bit8 == 1) {       // overflow
+                                        FILL(reg1);
+                                    } else {
+                                        reg1.bit8 = 1;
+                                    }
+                                } else {
+                                    reg1.bit7 = 1;
+                                }
+                            } else {
+                                reg1.bit6 = 1;
+                            }
+                        } else {
+                            reg1.bit5 = 1;
+                        }
+                    } else {
+                        reg1.bit4 = 1;
+                    }
+                } else {
+                    reg1.bit3 = 1;
+                }
+            }
+
+            // Bit 2
+            if (((c << 30) >> 31) == -1) {
+                if (reg1.bit2 == 1) {                           // carry to 3
+                    reg1.bit2 = 0;
+                    if (reg1.bit3 == 1) {                       // carry to 4
+                        reg1.bit3 = 0;
+                        if (reg1.bit4 == 1) {                   // carry to 5
+                            reg1.bit4 = 0;
+                            if (reg1.bit5 == 1) {               // carry to 6
+                                reg1.bit5 = 0;
+                                if (reg1.bit6 == 1) {           // carry to 7
+                                    reg1.bit6 = 0;
+                                    if (reg1.bit7 == 1) {       // carry to 8
+                                        reg1.bit7 = 0;
+                                        if (reg1.bit8 == 1) {   // overflow
+                                            FILL(reg1);
+                                        } else {
+                                            reg1.bit8 = 1;
+                                        }
+                                    } else {
+                                        reg1.bit7 = 1;
+                                    }
+                                } else {
+                                    reg1.bit6 = 1;
+                                }
+                            } else {
+                                reg1.bit5 = 1;
+                            }
+                        } else {
+                            reg1.bit4 = 1;
+                        }
+                    } else {
+                        reg1.bit3 = 1;
+                    }
+                } else {
+                    reg1.bit2 = 1;
+                }
+            }
+    
+            // Bit 1
+            if (((c << 31) >> 31) == -1) {
+                if (reg1.bit1 == 1) {                               // carry to 2
+                    reg1.bit1 = 0;
+                    if (reg1.bit2 == 1) {                           // carry to 3
+                        reg1.bit2 = 0;
+                        if (reg1.bit3 == 1) {                       // carry to 4
+                            reg1.bit3 = 0;
+                            if (reg1.bit4 == 1) {                   // carry to 5
+                                reg1.bit4 = 0;
+                                if (reg1.bit5 == 1) {               // carry to 6
+                                    reg1.bit5 = 0;
+                                    if (reg1.bit6 == 1) {           // carry to 7
+                                        reg1.bit6 = 0;
+                                        if (reg1.bit7 == 1) {       // carry to 8
+                                            reg1.bit7 = 0;
+                                            if (reg1.bit8 == 1) {   // overflow
+                                                FILL(reg1);
+                                            } else {
+                                                reg1.bit8 = 1;
+                                            }
+                                        } else {
+                                            reg1.bit7 = 1;
+                                        }
+                                    } else {
+                                        reg1.bit6 = 1;
+                                    }
+                                } else {
+                                    reg1.bit5 = 1;
+                                }
+                            } else {
+                                reg1.bit4 = 1;
+                            }
+                        } else {
+                            reg1.bit3 = 1;
+                        }
+                    } else {
+                        reg1.bit2 = 1;
+                    }
+                } else {
+                    reg1.bit1 = 1;
+                }
+            }
+            #pragma endregion
         }
 	}
     if (NOT_EMPTY(reg3)) {
