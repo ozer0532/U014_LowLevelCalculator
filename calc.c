@@ -35,7 +35,7 @@ typedef struct {
 
 reg reg1;   // input
 reg reg2;   // prev/out
-reg reg3;   // op/help
+reg reg3;   // op/loop
 reg reg4;   // keep
 
 // Ops list
@@ -44,8 +44,8 @@ reg reg4;   // keep
 // * = 3
 // / = 4
 // % = 5
-// ^ = 6
-// r = 7
+// ^ = 16
+// r = 32
 
 void debugPrint(reg regI) {
     printf("%d:%d:%d:%d:%d:%d:%d:%d\n", regI.bit8, regI.bit7, regI.bit6, regI.bit5, regI.bit4, regI.bit3, regI.bit2, regI.bit1);
@@ -805,6 +805,147 @@ void mod() {
 
 #pragma endregion mod
 
+#pragma region pow
+
+void powadd() {
+    // Add bit 8
+    if (reg2.bit8 == 1) {
+        FILL(reg2);                             // OVERFLOW
+    }
+
+    // Add bit 7
+    if (reg2.bit7 == 1) {
+        addCarry8();                            // CARRY
+    }
+
+    // Add bit 6
+    if (reg2.bit6 == 1) {
+        addCarry7();                            // CARRY
+    }
+
+    // Add bit 5
+    if (reg2.bit5 == 1) {
+        addCarry6();                            // CARRY
+    }
+
+    // Add bit 4
+    if (reg2.bit4 == 1) {
+        addCarry5();                            // CARRY
+    }
+
+    // Add bit 3
+    if (reg2.bit3 == 1) {
+        addCarry4();                            // CARRY
+    }
+    
+    // Add bit 2
+    if (reg2.bit2 == 1) {
+        addCarry3();                            // CARRY
+    }
+
+    // Add bit 1
+    if (reg2.bit1 == 1) {
+        addCarry2();                            // CARRY
+    }
+}
+
+void powMul() {
+    // Init loop counter
+    // Copy reg1 to lower half of reg3 (number of adds)
+    reg3.bit4 = reg3.bit8;
+    reg3.bit3 = reg3.bit7;
+    reg3.bit2 = reg3.bit6;
+    reg3.bit1 = reg3.bit5;
+    CLEAR(reg2);
+
+    powmul_loop:
+    add();
+    dec(&reg3);
+    if (!((reg3.bit4 == 0) && (reg3.bit3 == 0) && (reg3.bit2 == 0) && (reg3.bit1 == 0))) {
+        goto powmul_loop;
+    }
+}
+
+void pwr() {
+    if (IS(reg1,0,0,0,0,0,0,0,0)) { // a ^ 0
+        SET(reg2,0,0,0,0,0,0,0,1);
+        return;
+    }
+    if (IS(reg1,0,0,0,0,0,0,0,1)) {
+        return;                     // Reg2 as is (1 ^ n)
+    }
+    if (IS(reg2,0,0,0,0,0,0,0,0)) {
+        return;                     // Reg2 is 0 (0 ^ n)
+    }
+    if ((reg1.bit8 == 1) || (reg1.bit7 == 1) || (reg1.bit6 == 1) || (reg1.bit5 == 1) || (reg1.bit4 == 1)) { // Guaranteed overflow (max a ^ 8 i.e. 2 ^ 8)
+        FILL(reg2);
+        return;
+    }
+    if ((reg2.bit8 == 1) || (reg2.bit7 == 1) || (reg2.bit6 == 1) || (reg2.bit5 == 1)) { // Guaranteed overflow (max 16 ^ n i.e. 16 ^ 2)
+        FILL(reg2);
+        return;
+    }
+
+    // Init pow loop
+    // Copy lower half of reg1 to upper half of reg3 (a)
+    reg3.bit8 = reg2.bit4;
+    reg3.bit7 = reg2.bit3;
+    reg3.bit6 = reg2.bit2;
+    reg3.bit5 = reg2.bit1;
+
+    // Jump to corresponding pow
+    if (IS(reg1,0,0,0,0,0,1,1,1)) {
+        goto pow7;
+    }
+    if (IS(reg1,0,0,0,0,0,1,1,0)) {
+        goto pow6;
+    }
+    if (IS(reg1,0,0,0,0,0,1,0,1)) {
+        goto pow5;
+    }
+    if (IS(reg1,0,0,0,0,0,1,0,0)) {
+        goto pow4;
+    }
+    if (IS(reg1,0,0,0,0,0,0,1,1)) {
+        goto pow3;
+    }
+    else {
+        goto pow2;
+    }
+
+    // Pow 7
+    pow7:
+    COPY(reg2, reg1);
+    powMul();
+
+    pow6:
+    // Pow 6
+    COPY(reg2, reg1);
+    powMul();
+
+    pow5:
+    // Pow 5
+    COPY(reg2, reg1);
+    powMul();
+
+    pow4:
+    // Pow 4
+    COPY(reg2, reg1);
+    powMul();
+
+    pow3:
+    // Pow 3
+    COPY(reg2, reg1);
+    powMul();
+
+    pow2:
+    // Pow 2
+    COPY(reg2, reg1);
+    powMul();
+}
+
+#pragma endregion pow
+
 // Checks the operator and does the calculation
 void resolveOperation() {
     if (IS(reg3,0,0,0,0,0,0,0,1)) {         // +
@@ -822,6 +963,34 @@ void resolveOperation() {
     } else if (IS(reg3,0,0,0,0,0,1,0,1)) {  // %
         mod();
         CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,1,0,0,0,0)) {  // ^
+        pwr();
+        CLEAR(reg3);
+    } else if (IS(reg3,0,0,0,1,0,0,0,1)) {  // +^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,0,1);
+    } else if (IS(reg3,0,0,0,1,0,0,1,0)) {  // -^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,1,0);
+    } else if (IS(reg3,0,0,0,1,0,0,1,1)) {  // *^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,0,1,1);
+    } else if (IS(reg3,0,0,0,1,0,1,0,0)) {  // /^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,1,0,0);
+    } else if (IS(reg3,0,0,0,1,0,1,0,1)) {  // %^
+        pwr();
+        COPY(reg2, reg1);
+        COPY(reg4, reg2);
+        SET(reg3,0,0,0,0,0,1,0,1);
     }
 }
 
@@ -830,6 +999,19 @@ void commonResolveCheck() {
         resolveOperation();
         CLEAR(reg1);
     } else {
+        COPY(reg1, reg2);
+        CLEAR(reg1);
+    }
+}
+
+void superResolveCheck() {
+    if ((reg3.bit5 == 1) || (reg3.bit6 == 1)) {
+        resolveOperation();
+        COPY(reg2, reg4);
+        COPY(reg1, reg2);
+        CLEAR(reg1);
+    } else {
+        COPY(reg2, reg4);
         COPY(reg1, reg2);
         CLEAR(reg1);
     }
@@ -869,8 +1051,12 @@ int main(int argc, char* argv[]){
             SET(reg3, 0, 0, 0, 0, 0, 1, 0, 1);
         } else if (c == '^') {
             // POWER
+            superResolveCheck();
+            reg3.bit5 = 1;
         } else if (c == 'r') {
             // SQUARE ROOT
+            superResolveCheck();
+            reg3.bit6 = 1;
         } else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
             // WHITESPACE (IGNORE)
         } else {
@@ -880,6 +1066,9 @@ int main(int argc, char* argv[]){
 	}
     if (NOT_EMPTY(reg3)) {
         resolveOperation();
+        if (NOT_EMPTY(reg3)) {      // resolve supers
+            resolveOperation();
+        }
     } else {
         COPY(reg1, reg2);
     }
